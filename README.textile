@@ -1,40 +1,4 @@
-h1. PROJECT OVERVIEW
-
-Spatial4j is a general purpose spatial / geospatial "ASL":http://www.apache.org/licenses/LICENSE-2.0.html licensed open-source Java library. It's core capabilities are 3-fold: to provide common geospatially-aware shapes, to provide distance calculations and other math, and to read and write the shapes to strings.
-
-The most popular spatial library in Java is probably "JTS":https://sourceforge.net/projects/jts-topo-suite/. JTS is powerful but it is LGPL licensed, and it is not a geospatial library -- just spatial.  Surprisingly, there is no native circle shape in JTS either.  Nevertheless, JTS is very powerful and Spatial4J includes integration classes for it.
-
-h3. Features
-
-* Shape classes that are geospatially[1] aware
-** Shapes: Point, Rectangle, Circle, Polygon (via JTS)
-** shape x shape intersection logic, yielding: disjoint, contains, within, intersects
-** bounding box
-* Distance math
-** Spherical: Law of Cosines, Haversine, Vincenty
-* Input and Output of shapes to strings using our dialect of "WKT":http://en.wikipedia.org/wiki/Well-known_text
-* Integration with JTS to adapt its shapes to Spatial4j's interfaces, including adding some geospatial awareness
-* No runtime dependencies unless JTS is needed
-
-In addition, the code is fairly well tested and it's monitored via continuous-integration software..
-
-fn1. Geospatial awareness means it is aware of the implications of the international dateline and poles.
-
-h3. Future Roadmap
-
-* Better and more standardized WKT support and potential use of CQL where it makes sense.
-* Dateline wrap support to the JTS polygon
-* Polygon support without JTS, maybe via java.awt.geom
-* Better support for other projections (not just WGS-84)
-* Elliptical earth model distance math
-
-h3. Discuss
-
-Discuss Spatial4j on our "mailing list":http://spatial4j.16575.n6.nabble.com/.
-
-h1. Other Modules
-
-Spatial4j includes some other modules aside from the core library:
+h1. Modules:
 
 h2. spatial4j-solr
 
@@ -47,6 +11,13 @@ h2. spatial4j-demo
 Contains a demo web application using spatial-solr.  Consumes sample data and "geonames":http://www.geonames.org/export/.
 See the provided README.txt in there for instructions to try it out.
 
-h1. History
+h1. Misc
 
-Spatial4j began life as "Lucene Spatial Playground":http://code.google.com/p/lucene-spatial-playground/ (LSP) and from this work a generic core spatial library emerged. The Lucene and Solr modules parts will hopefully merge into the Apache Lucene and Solr projects.
+h2. Discuss
+
+Discuss Spatial4j on our "mailing list":http://spatial4j.16575.n6.nabble.com/.
+
+
+h2. History
+
+Lucene-Spatial-Extras began life as "Lucene Spatial Playground":http://code.google.com/p/lucene-spatial-playground/ (LSP) which was migrated to Spatial4j on GitHub and then was broken up such that the Lucene spatial demo + some Lucene/Solr spatial extras were migrated to a new repository -- this one.
