@@ -16,13 +16,8 @@
  */
 package org.apache.solr.spatial.pending;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.lucene.spatial.bbox.BBoxFieldInfo;
 import org.apache.lucene.spatial.bbox.BBoxStrategy;
-import org.apache.lucene.spatial.util.NumericFieldInfo;
+import org.apache.solr.schema.AbstractSpatialFieldType;
 import org.apache.solr.schema.BoolField;
 import org.apache.solr.schema.FieldType;
 import org.apache.solr.schema.IndexSchema;
@@ -30,18 +25,12 @@ import org.apache.solr.schema.SchemaAware;
 import org.apache.solr.schema.SchemaField;
 import org.apache.solr.schema.TrieDoubleField;
 import org.apache.solr.schema.TrieField;
-import org.apache.solr.spatial.SpatialFieldType;
 
-import com.spatial4j.core.context.jts.JtsSpatialContext;
-import com.spatial4j.core.distance.DistanceUnits;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
-
-
-/**
- * Syntax for the field input:
- *
- */
-public class BBoxFieldType extends SpatialFieldType<BBoxFieldInfo> implements SchemaAware
+public class BBoxFieldType extends AbstractSpatialFieldType<BBoxStrategy> implements SchemaAware
 {
   protected String doubleFieldName = "double";
   protected String booleanFieldName = "boolean";
@@ -50,6 +39,7 @@ public class BBoxFieldType extends SpatialFieldType<BBoxFieldInfo> implements Sc
 
   double queryPower = 1.0;
   double targetPower = 1.0f;
+  private int precisionStep;
 
   @Override
   protected void init(IndexSchema schema, Map<String, String> args) {
@@ -64,10 +54,13 @@ public class BBoxFieldType extends SpatialFieldType<BBoxFieldInfo> implements Sc
     if( v != null ) {
       booleanFieldName = v;
     }
+  }
 
-    ctx = new JtsSpatialContext(DistanceUnits.KILOMETERS);
-    spatialStrategy = new BBoxStrategy(ctx);
-    spatialStrategy.setIgnoreIncompatibleGeometry( ignoreIncompatibleGeometry );
+  @Override
+  protected BBoxStrategy newSpatialStrategy(String s) {
+    BBoxStrategy strategy = new BBoxStrategy(ctx, s);
+    strategy.setPrecisionStep(precisionStep);
+    return strategy;
   }
 
   @Override
@@ -89,23 +82,19 @@ public class BBoxFieldType extends SpatialFieldType<BBoxFieldInfo> implements Sc
       throw new RuntimeException( "double must be TrieDoubleField: "+doubleType );
     }
 
-    BBoxStrategy strategy = (BBoxStrategy)spatialStrategy;
     TrieField df = (TrieField)doubleType;
-    strategy.finfo = new NumericFieldInfo();
-    strategy.finfo.setPrecisionStep( df.getPrecisionStep() );
-    strategy.finfo.store = false; // TODO properties &...
-    strategy.finfo.index = true; // TODO properties &...
+    precisionStep = df.getPrecisionStep();
 
 
     List<SchemaField> fields = new ArrayList<SchemaField>( schema.getFields().values() );
     for( SchemaField sf : fields ) {
       if( sf.getType() == this ) {
-        BBoxFieldInfo info = getFieldInfo(sf);
-        register( schema, new SchemaField( info.minX, doubleType, fieldProps, null ) );
-        register( schema, new SchemaField( info.maxX, doubleType, fieldProps, null ) );
-        register( schema, new SchemaField( info.minY, doubleType, fieldProps, null ) );
-        register( schema, new SchemaField( info.maxY, doubleType, fieldProps, null ) );
-        register( schema, new SchemaField( info.xdl, booleanType, fieldProps, null ) );
+        String name = sf.getName();
+        register( schema, new SchemaField( name + BBoxStrategy.SUFFIX_MINX, doubleType, fieldProps, null ) );
+        register( schema, new SchemaField( name + BBoxStrategy.SUFFIX_MAXX, doubleType, fieldProps, null ) );
+        register( schema, new SchemaField( name + BBoxStrategy.SUFFIX_MINY, doubleType, fieldProps, null ) );
+        register( schema, new SchemaField( name + BBoxStrategy.SUFFIX_MAXY, doubleType, fieldProps, null ) );
+        register( schema, new SchemaField( name + BBoxStrategy.SUFFIX_XDL, booleanType, fieldProps, null ) );
       }
     }
   }
@@ -115,12 +104,5 @@ public class BBoxFieldType extends SpatialFieldType<BBoxFieldInfo> implements Sc
     s.getFields().put( sf.getName(), sf );
   }
 
-
-  @Override
-  protected BBoxFieldInfo getFieldInfo(SchemaField field) {
-    BBoxFieldInfo info = new BBoxFieldInfo();
-    info.setFieldsPrefix( field.getName() );
-    return info;
-  }
 }
 

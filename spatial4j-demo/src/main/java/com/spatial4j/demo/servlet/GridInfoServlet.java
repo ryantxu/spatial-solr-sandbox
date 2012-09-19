@@ -1,33 +1,34 @@
 package com.spatial4j.demo.servlet;
 
-import com.spatial4j.demo.app.WicketApplication;
-import de.micromata.opengis.kml.v_2_2_0.Kml;
-import org.apache.commons.io.IOUtils;
 import com.spatial4j.core.context.jts.JtsSpatialContext;
 import com.spatial4j.core.io.sample.SampleData;
 import com.spatial4j.core.io.sample.SampleDataReader;
 import com.spatial4j.core.shape.Shape;
-
+import com.spatial4j.demo.KMLHelper;
+import com.spatial4j.demo.app.WicketApplication;
+import de.micromata.opengis.kml.v_2_2_0.Kml;
+import org.apache.commons.io.IOUtils;
 import org.apache.lucene.spatial.prefix.tree.GeohashPrefixTree;
 import org.apache.lucene.spatial.prefix.tree.QuadPrefixTree;
 import org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree;
 import org.apache.lucene.spatial.query.SpatialArgs;
-
-import com.spatial4j.demo.KMLHelper;
+import org.apache.lucene.spatial.query.SpatialOperation;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.Date;
 import java.util.List;
 
 
 public class GridInfoServlet extends HttpServlet
 {
-  JtsSpatialContext ctx = JtsSpatialContext.GEO_KM;
+  JtsSpatialContext ctx = JtsSpatialContext.GEO;
 
   @Override
   public void init(ServletConfig config) throws ServletException {
@@ -93,7 +94,6 @@ public class GridInfoServlet extends HttpServlet
       return;
     }
    
-    double distErrPct = getDoubleParam(req, "distErrPct", SpatialArgs.DEFAULT_DIST_PRECISION);
 
     // If they don't set a country, then use the input
     if( shape == null ) {
@@ -110,7 +110,10 @@ public class GridInfoServlet extends HttpServlet
         res.sendError(HttpServletResponse.SC_BAD_REQUEST, "error parsing geo: "+ex );
       }
     }
-    int detailLevel = grid.getMaxLevelForPrecision(shape,distErrPct);
+    SpatialArgs args = new SpatialArgs(SpatialOperation.Intersects, shape);
+    double distErrPct = getDoubleParam(req, "distErrPct", SpatialArgs.DEFAULT_DISTERRPCT);
+    double distErr = args.resolveDistErr(grid.getSpatialContext(), distErrPct);
+    int detailLevel = grid.getLevelForDistance(distErr);
     log("Using detail level "+detailLevel);
     List<String> info = SpatialPrefixTree.nodesToTokenStrings(grid.getNodes(shape, detailLevel, false));
     String format = req.getParameter( "format" );

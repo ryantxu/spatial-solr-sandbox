@@ -1,10 +1,12 @@
 package com.spatial4j.demo.app;
 
-import de.micromata.opengis.kml.v_2_2_0.Kml;
-import org.apache.commons.lang.time.DurationFormatUtils;
+import com.google.common.base.Throwables;
 import com.spatial4j.core.context.jts.JtsSpatialContext;
 import com.spatial4j.core.shape.Shape;
-
+import com.spatial4j.demo.KMLHelper;
+import com.spatial4j.demo.SampleDataLoader;
+import de.micromata.opengis.kml.v_2_2_0.Kml;
+import org.apache.commons.lang.time.DurationFormatUtils;
 import org.apache.lucene.spatial.prefix.tree.GeohashPrefixTree;
 import org.apache.lucene.spatial.prefix.tree.Node;
 import org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree;
@@ -13,15 +15,13 @@ import org.apache.lucene.spatial.query.SpatialOperation;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.impl.ConcurrentUpdateSolrServer;
+import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.params.SolrParams;
-import com.spatial4j.demo.KMLHelper;
-import com.spatial4j.demo.SampleDataLoader;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.PageParameters;
 import org.apache.wicket.RequestCycle;
@@ -40,7 +40,11 @@ import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.markup.html.link.ExternalLink;
 import org.apache.wicket.markup.html.link.Link;
 import org.apache.wicket.markup.repeater.RepeatingView;
-import org.apache.wicket.model.*;
+import org.apache.wicket.model.AbstractReadOnlyModel;
+import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.request.target.resource.ResourceStreamRequestTarget;
 import org.apache.wicket.util.file.File;
 import org.apache.wicket.util.resource.IResourceStream;
@@ -48,8 +52,6 @@ import org.apache.wicket.util.resource.StringResourceStream;
 import org.apache.wicket.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Throwables;
 
 import java.io.StringWriter;
 import java.net.URLEncoder;
@@ -70,7 +72,7 @@ public class SearchPage extends WebPage
 
   // Dirty Dirty Dirty Hack...
   //static final SpatialPrefixTree grid = new QuadPrefixTree( -180, 180, -90-180, 90, 16 );
-  static final SpatialPrefixTree grid = new GeohashPrefixTree(JtsSpatialContext.GEO_KM,GeohashPrefixTree.getMaxLevelsPossible());
+  static final SpatialPrefixTree grid = new GeohashPrefixTree(JtsSpatialContext.GEO,GeohashPrefixTree.getMaxLevelsPossible());
   static final SolrServer solr;
   static {
     solr = new HttpSolrServer( "http://localhost:8080/solr" );
@@ -342,7 +344,9 @@ public class SearchPage extends WebPage
         String shapeString = (String)docs.get(0).getFirstValue( field );
 
         Shape shape = grid.getSpatialContext().readShape(shapeString);
-        int detailLevel = grid.getMaxLevelForPrecision(shape, SpatialArgs.DEFAULT_DIST_PRECISION);
+        SpatialArgs args = new SpatialArgs(SpatialOperation.Intersects, shape);
+        double distErr = args.resolveDistErr(grid.getSpatialContext(), SpatialArgs.DEFAULT_DISTERRPCT);
+        int detailLevel = grid.getLevelForDistance(distErr);
         List<Node> cells = grid.getNodes(shape, detailLevel, false);//false = no intermediates
         List<String> tokens = SpatialPrefixTree.nodesToTokenStrings(cells);
         return KMLHelper.toKML(name, grid, tokens);

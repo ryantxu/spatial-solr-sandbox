@@ -45,15 +45,23 @@ public class SpatialDemoUpdateProcessorFactory extends UpdateRequestProcessorFac
     @Override
     public void processAdd(AddUpdateCommand cmd) throws IOException
     {
-      // This converts the 'geo' field to a shape once and will let the standard CopyField copy to relevant fields
-      SolrInputField f = cmd.solrDoc.get( sourceFieldName );
-      if( f != null ) {
-        if( f.getValueCount() > 1 ) {
-          throw new RuntimeException( "multiple values found for 'geometry' field: "+f.getValue() );
+      // This converts the 'geo' field to a shape
+      SolrInputField field = cmd.solrDoc.get( sourceFieldName );
+      if( field != null ) {
+        if( field.getValueCount() > 1 ) {
+          throw new RuntimeException( "multiple values found for 'geometry' field: "+field.getValue() );
         }
-        if( !(f.getValue() instanceof Shape) ) {
-          Shape shape = ctx.readShape( f.getValue().toString() );
-          f.setValue( shape, f.getBoost() );
+        if( !(field.getValue() instanceof Shape) ) {
+          Shape shape = ctx.readShape( field.getValue().toString() );
+          field.setValue( shape, field.getBoost() );
+
+          SolrInputField bboxField = field.deepCopy();
+          bboxField.setValue(shape.getBoundingBox(), field.getBoost());
+          cmd.solrDoc.put("bbox", bboxField);
+
+          SolrInputField ptField = field.deepCopy();
+          ptField.setValue(shape.getCenter(), field.getBoost());
+          cmd.solrDoc.put("vector2d", ptField);
         }
       }
       super.processAdd(cmd);

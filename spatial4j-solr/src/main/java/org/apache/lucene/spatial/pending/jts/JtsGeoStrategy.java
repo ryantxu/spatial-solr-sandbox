@@ -16,44 +16,40 @@
  */
 package org.apache.lucene.spatial.pending.jts;
 
-import org.apache.lucene.document.DerefBytesDocValuesField;
-import org.apache.lucene.index.IndexableField;
-import org.apache.lucene.queries.function.ValueSource;
-import org.apache.lucene.search.ConstantScoreQuery;
-import org.apache.lucene.search.Filter;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.spatial.SimpleSpatialFieldInfo;
-import org.apache.lucene.spatial.SpatialStrategy;
-import org.apache.lucene.util.BytesRef;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.spatial4j.core.context.jts.JtsSpatialContext;
 import com.spatial4j.core.exception.InvalidShapeException;
+import com.spatial4j.core.shape.Point;
 import com.spatial4j.core.shape.Shape;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.io.WKBWriter;
 import com.vividsolutions.jts.simplify.TopologyPreservingSimplifier;
+import org.apache.lucene.document.DerefBytesDocValuesField;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.queries.function.ValueSource;
+import org.apache.lucene.search.Filter;
+import org.apache.lucene.spatial.SpatialStrategy;
+import org.apache.lucene.spatial.query.SpatialArgs;
+import org.apache.lucene.util.BytesRef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Put raw WKB in DocValues
  */
-public class JtsGeoStrategy extends SpatialStrategy<SimpleSpatialFieldInfo> {
+public class JtsGeoStrategy extends SpatialStrategy {
 
   private static final Logger logger = LoggerFactory.getLogger(JtsGeoStrategy.class);
 
-  private final JtsSpatialContext context;
   private int max_wkb_length = 32000;
 
-  public JtsGeoStrategy(JtsSpatialContext ctx) {
-    super(ctx);
-    this.context = ctx;
+  public JtsGeoStrategy(JtsSpatialContext ctx, String name) {
+    super(ctx, name);
   }
 
   @Override
-  public IndexableField createField(SimpleSpatialFieldInfo indexInfo, Shape shape, boolean index, boolean store) {
-    Geometry geo = context.getGeometryFrom(shape);
+  public Field[] createIndexableFields(Shape shape) {
+    Geometry geo = ((JtsSpatialContext)ctx).getGeometryFrom(shape);
 
     WKBWriter writer = new WKBWriter();
     BytesRef wkb = new BytesRef(writer.write(geo));
@@ -81,29 +77,18 @@ public class JtsGeoStrategy extends SpatialStrategy<SimpleSpatialFieldInfo> {
       }
     }
 
-    return new DerefBytesDocValuesField(indexInfo.getFieldName(), wkb);
+    return new Field[]{new DerefBytesDocValuesField(getFieldName(), wkb)};
   }
 
   @Override
-  public Query makeQuery(org.apache.lucene.spatial.query.SpatialArgs args,
-      SimpleSpatialFieldInfo fieldInfo) {
-    Filter f = makeFilter(args, fieldInfo);
-    // TODO... could add in scoring here..
-    return new ConstantScoreQuery( f );
-  }
-
-  @Override
-  public ValueSource makeValueSource(
-      org.apache.lucene.spatial.query.SpatialArgs args,
-      SimpleSpatialFieldInfo fieldInfo) {
+  public ValueSource makeDistanceValueSource(Point queryPoint) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public Filter makeFilter(org.apache.lucene.spatial.query.SpatialArgs args,
-      SimpleSpatialFieldInfo field) {
-    Geometry geo = context.getGeometryFrom(args.getShape());
+  public Filter makeFilter(SpatialArgs args) {
+    Geometry geo = ((JtsSpatialContext)ctx).getGeometryFrom(args.getShape());
     GeometryTest tester = GeometryTestFactory.get(args.getOperation(), geo);
-    return new GeometryOperationFilter(field.getFieldName(), tester, context);
+    return new GeometryOperationFilter(getFieldName(), tester, ((JtsSpatialContext)ctx));
   }
 }

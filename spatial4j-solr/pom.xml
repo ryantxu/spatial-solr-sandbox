@@ -48,7 +48,7 @@
 		<dependency>
 		  <groupId>com.spatial4j</groupId>
 		  <artifactId>spatial4j</artifactId>
-		  <version>${project.version}</version>
+		  <version>0.3</version><!-- ${project.version} -->
 		</dependency>
 
     <dependency>
