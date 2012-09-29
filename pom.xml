@@ -7,30 +7,11 @@
     <version>7</version>
   </parent>
 
-  <groupId>com.spatial4j</groupId>
-  <artifactId>spatial4j-parent</artifactId>
+  <groupId>spatial-solr-sandbox</groupId>
+  <artifactId>parent</artifactId>
   <version>0.3-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>spatial4j-parent</name>
-  <description>
-   Java Spatial Library (Parent POM)
-  </description>
-
-  <url>http://spatial4j.com</url>
-
-  <licenses>
-    <license>
-      <name>The Apache Software License, Version 2.0</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
-
-  <scm>
-  	<connection>scm:git:git@github.com:spatial4j/spatial4j.git</connection>
-    <developerConnection>scm:git:git@github.com:spatial4j/spatial4j.git</developerConnection>
-    <url>git@github.com:spatial4j/spatial4j.git</url>
-  </scm>
 
   <properties>
     <!-- this magic system property is honored by many plugins: http://docs.codehaus.org/display/MAVENUSER/POM+Element+for+Source+File+Encoding -->
@@ -98,20 +79,10 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>2.9</version>
         <configuration>
-          <systemPropertyVariables>
-            <!-- taken from Lucene's pom -->
-            <jetty.testMode>1</jetty.testMode>
-            <tests.verbose>${tests.verbose}</tests.verbose>
-            <tests.codec>${tests.codec}</tests.codec>
-            <tests.directory>${tests.directory}</tests.directory>
-            <tests.iter>${tests.iter}</tests.iter>
-            <tests.locale>${tests.locale}</tests.locale>
-            <tests.luceneMatchVersion>${tests.luceneMatchVersion}</tests.luceneMatchVersion>
-            <tests.multiplier>${tests.multiplier}</tests.multiplier>
-            <tests.nightly>${tests.nightly}</tests.nightly>
-            <tests.seed>${tests.seed}</tests.seed>
-            <tests.timezone>${tests.timezone}</tests.timezone>
-          </systemPropertyVariables>
+          <!-- This is a small project that should have no problem with tests
+          running in the maven JVM. This also conveniently means system
+          properties pass through. -->
+          <forkMode>never</forkMode>
         </configuration>
       </plugin>
 
@@ -232,9 +203,8 @@
   </profiles>
 
   <modules>
-    <!-- <module>spatial4j-core</module> -->
-    <module>spatial4j-solr</module>
-    <module>spatial4j-demo</module>
+    <module>LSE</module>
+    <module>spatial-demo</module>
   </modules>
   
 </project>

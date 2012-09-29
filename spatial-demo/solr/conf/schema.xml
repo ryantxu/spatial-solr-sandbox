@@ -55,11 +55,11 @@
     </fieldType>
 
     <!-- Geometry Field Strategies -->
-    <fieldType name="geo"       class="org.apache.solr.spatial.pending.GeometryFieldType" />
-    <fieldType name="bbox"      class="org.apache.solr.spatial.pending.BBoxFieldType" />
-    <fieldType name="vector2d"  class="solr.SpatialTwoDoublesFieldType" />
-    <fieldType name="quad"      class="solr.SpatialTermQueryPrefixTreeFieldType" />
-    <fieldType name="geohash"   class="solr.SpatialRecursivePrefixTreeFieldType" />
+    <fieldType name="geo"       class="org.apache.solr.spatial.pending.GeometryFieldType" units="degrees" />
+    <fieldType name="bbox"      class="org.apache.solr.spatial.pending.BBoxFieldType" units="degrees" />
+    <fieldType name="ptvector"  class="solr.SpatialPointVectorFieldType" units="degrees" />
+    <fieldType name="quad"      class="solr.SpatialTermQueryPrefixTreeFieldType" units="degrees" />
+    <fieldType name="geohash"   class="solr.SpatialRecursivePrefixTreeFieldType" units="degrees" />
 
  </types>
 
@@ -70,8 +70,9 @@
    <field name="source" type="string"  indexed="true" stored="true" />
    
    <!-- geometry -->
-   <field name="geo"      type="geo"      indexed="true" stored="true"  multiValued="false" />
-   <field name="vector2d" type="vector2d" indexed="true" stored="true"  multiValued="false" />
+   <!--<field name="geo"      type="geo"      indexed="true" stored="true"  multiValued="false" />-->
+   <field name="geo"      type="string"      indexed="false" stored="true"  multiValued="false" />
+   <field name="ptvector" type="ptvector" indexed="true" stored="true"  multiValued="false" />
    <field name="bbox"     type="bbox"     indexed="true" stored="true"  multiValued="false" />
    <field name="quad"     type="quad"     indexed="true" stored="true"  multiValued="false" />
    <field name="geohash"  type="geohash"  indexed="true" stored="true"  multiValued="true" />
@@ -84,7 +85,7 @@
  <uniqueKey>id</uniqueKey>
 
  <!-- Various index strategies -->
- <copyField source="geo" dest="quad"/>
+ <!--<copyField source="geo" dest="quad"/>-->
  <copyField source="geo" dest="geohash"/>
  <!--<copyField source="geo" dest="bbox"/>-->
  <!-- 

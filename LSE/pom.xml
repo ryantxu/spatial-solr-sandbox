@@ -17,18 +17,17 @@
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  
+
   <parent>
-    <groupId>com.spatial4j</groupId>
-    <artifactId>spatial4j-parent</artifactId>
+    <groupId>spatial-solr-sandbox</groupId>
+    <artifactId>parent</artifactId>
     <version>0.3-SNAPSHOT</version>
   </parent>
-  
-  <artifactId>spatial4j-solr</artifactId>
+  <artifactId>lse</artifactId>
 
-  <name>Spatial - Solr</name>
+  <name>Lucene Spatial Extensions</name>
   <description>
-    Solr spatial stuff...
+    Spatial extensions/enhancements for Apache Lucene, Solr, and Spatial4j.
   </description>
   <packaging>jar</packaging>
 
@@ -44,12 +43,6 @@
       <version>${lucene.version}</version>
       <scope>test</scope>
     </dependency>
-    
-		<dependency>
-		  <groupId>com.spatial4j</groupId>
-		  <artifactId>spatial4j</artifactId>
-		  <version>0.3</version><!-- ${project.version} -->
-		</dependency>
 
     <dependency>
       <groupId>com.vividsolutions</groupId>
@@ -64,11 +57,11 @@
       </exclusions>
     </dependency>
 
-		<dependency>
-		  <groupId>org.apache.solr</groupId>
-		  <artifactId>solr-core</artifactId>
-		  <version>${lucene.version}</version>
-		</dependency>
+    <dependency>
+      <groupId>org.apache.solr</groupId>
+      <artifactId>solr-core</artifactId>
+      <version>${lucene.version}</version>
+    </dependency>
 
     <dependency>
       <groupId>javax.servlet</groupId>
@@ -79,5 +72,5 @@
 
     <!-- TESTING -->
   </dependencies>
-  
+
 </project>
