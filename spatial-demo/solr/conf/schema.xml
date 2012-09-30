@@ -27,6 +27,8 @@
     <fieldType name="tdouble" class="solr.TrieDoubleField" precisionStep="8" omitNorms="true" positionIncrementGap="0"/>
     <fieldType name="date" class="solr.TrieDateField" omitNorms="true" precisionStep="0" positionIncrementGap="0"/>
 
+    <fieldtype name="ignored" stored="false" indexed="false" multiValued="true" class="solr.StrField" />
+
     <fieldType name="text" class="solr.TextField" positionIncrementGap="100" autoGeneratePhraseQueries="true">
       <analyzer type="index">
         <tokenizer class="solr.WhitespaceTokenizerFactory"/>
@@ -68,14 +70,15 @@
    <field name="id"     type="string"  indexed="true" stored="true" required="true" /> 
    <field name="name"   type="text"    indexed="true" stored="true" required="true" />
    <field name="source" type="string"  indexed="true" stored="true" />
-   
+
+   <field name="shape"    type="string" multiValued="false" /><!-- original -->
+
    <!-- geometry -->
-   <!--<field name="geo"      type="geo"      indexed="true" stored="true"  multiValued="false" />-->
-   <field name="geo"      type="string"      indexed="false" stored="true"  multiValued="false" />
+   <field name="geo"      type="geo"      indexed="true" stored="true"  multiValued="false" />
    <field name="ptvector" type="ptvector" indexed="true" stored="true"  multiValued="false" />
    <field name="bbox"     type="bbox"     indexed="true" stored="true"  multiValued="false" />
    <field name="quad"     type="quad"     indexed="true" stored="true"  multiValued="false" />
-   <field name="geohash"  type="geohash"  indexed="true" stored="true"  multiValued="true" />
+   <field name="geohash"  type="geohash"  indexed="true" stored="true"  multiValued="false" />
    
  </fields>
 
@@ -85,17 +88,10 @@
  <uniqueKey>id</uniqueKey>
 
  <!-- Various index strategies -->
- <!--<copyField source="geo" dest="quad"/>-->
- <copyField source="geo" dest="geohash"/>
+  <!-- SpatialDemoUpdateProcessorFactory handles these instead of copyFields -->
+<!-- <copyField source="geo" dest="quad"/>
+ <copyField source="geo" dest="geohash"/>-->
  <!--<copyField source="geo" dest="bbox"/>-->
- <!-- 
- <copyField source="geo" dest="vector2d"/>
-  -->
-  
- <!-- field for the QueryParser to use when an explicit fieldname is absent -->
- <defaultSearchField>name</defaultSearchField>
-
- <!-- SolrQueryParser configuration: defaultOperator="AND|OR" -->
- <solrQueryParser defaultOperator="OR"/>
+ <!--<copyField source="geo" dest="ptvector"/>-->
 
 </schema>

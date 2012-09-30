@@ -10,6 +10,8 @@ import org.apache.solr.response.SolrQueryResponse;
 import org.apache.solr.update.AddUpdateCommand;
 import org.apache.solr.update.processor.UpdateRequestProcessor;
 import org.apache.solr.update.processor.UpdateRequestProcessorFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -17,6 +19,8 @@ import java.util.Collections;
 
 public class SpatialDemoUpdateProcessorFactory extends UpdateRequestProcessorFactory
 {
+  private static final Logger log = LoggerFactory.getLogger(SpatialDemoUpdateProcessorFactory.class);
+
   private SpatialContext ctx;
 
   private String sourceFieldName;
@@ -46,22 +50,42 @@ public class SpatialDemoUpdateProcessorFactory extends UpdateRequestProcessorFac
     public void processAdd(AddUpdateCommand cmd) throws IOException
     {
       // This converts the 'geo' field to a shape
-      SolrInputField field = cmd.solrDoc.get( sourceFieldName );
-      if( field != null ) {
-        if( field.getValueCount() > 1 ) {
-          throw new RuntimeException( "multiple values found for 'geometry' field: "+field.getValue() );
+      SolrInputField shapeField = cmd.solrDoc.get( sourceFieldName );
+      if( shapeField != null ) {
+        if( shapeField.getValueCount() > 1 ) {
+          throw new RuntimeException( "multiple values found for 'geometry' field: "+shapeField.getValue() );
         }
-        if( !(field.getValue() instanceof Shape) ) {
-          Shape shape = ctx.readShape( field.getValue().toString() );
-          field.setValue( shape, field.getBoost() );
+        if( !(shapeField.getValue() instanceof Shape) ) {
+          Shape shape;
+          try {
+            shape = ctx.readShape( shapeField.getValue().toString() );
+          } catch (Exception e) {
+            log.error("Couldn't read shape with id "+cmd.getPrintableId(), e);
+            return;//skip doc
+          }
+          float boost = shapeField.getBoost();
 
-          SolrInputField bboxField = field.deepCopy();
-          bboxField.setValue(shape.getBoundingBox(), field.getBoost());
-          cmd.solrDoc.put("bbox", bboxField);
+          SolrInputField field;
 
-          SolrInputField ptField = field.deepCopy();
-          ptField.setValue(shape.getCenter(), field.getBoost());
-          cmd.solrDoc.put("vector2d", ptField);
+          field = new SolrInputField("geo");
+          field.setValue(shape, boost);
+          cmd.solrDoc.put(field.getName(), field);
+
+          field = new SolrInputField("geohash");
+          field.setValue(shape, boost);
+          cmd.solrDoc.put(field.getName(), field);
+
+          field = new SolrInputField("quad");
+          field.setValue(shape, boost);
+          cmd.solrDoc.put(field.getName(), field);
+
+          field = new SolrInputField("bbox");
+          field.setValue(shape.getBoundingBox(), boost);
+          cmd.solrDoc.put(field.getName(), field);
+
+          field = new SolrInputField("ptvector");
+          field.setValue(shape.getCenter(), boost);
+          cmd.solrDoc.put(field.getName(), field);
         }
       }
       super.processAdd(cmd);

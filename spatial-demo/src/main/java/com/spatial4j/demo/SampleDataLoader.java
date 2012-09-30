@@ -1,17 +1,17 @@
 package com.spatial4j.demo;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-
 import com.spatial4j.core.io.sample.SampleData;
 import com.spatial4j.core.io.sample.SampleDataReader;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.common.SolrInputDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class SampleDataLoader
@@ -32,7 +32,7 @@ public class SampleDataLoader
       SolrInputDocument doc = new SolrInputDocument();
       doc.setField( "id", data.id+sfix );
       doc.setField( "name", data.name );
-      doc.setField( "geo", data.shape );
+      doc.setField( "shape", data.shape );
       doc.setField( "source", name );
       solr.add( doc );
       count++;
@@ -46,7 +46,7 @@ public class SampleDataLoader
 
   public void loadSampleData( File directory, SolrServer solr ) throws Exception
   {
-    status = "initalizing....";
+    status = "initializing....";
     running = true;
     String[][] names = new String[][] {
       new String[] { "world-cities-points.txt", "" },

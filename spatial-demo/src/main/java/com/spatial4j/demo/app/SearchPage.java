@@ -240,9 +240,10 @@ public class SearchPage extends WebPage
           public void run() {
             try {
               File data = WicketApplication.getDataDir();
-              
+
+              //20 queue size, 3 concurrent threads
               SolrServer sss = new ConcurrentUpdateSolrServer(
-                  "http://localhost:8080/solr", 50, 3 );
+                  "http://localhost:8080/solr", 20, 3 );
               
               // single thread
              // sss = new CommonsHttpSolrServer("http://localhost:8080/solr");
