@@ -39,41 +39,7 @@
 
 
   <indexConfig>
-   <!-- Values here affect all index writers and act as a default unless overridden. -->
-    <useCompoundFile>false</useCompoundFile>
-
-    <mergeFactor>10</mergeFactor>
-    <!-- If both ramBufferSizeMB and maxBufferedDocs is set, then Lucene will flush
-     based on whichever limit is hit first.  -->
-    <!--<maxBufferedDocs>1000</maxBufferedDocs>-->
-
-    <!-- Sets the amount of RAM that may be used by Lucene indexing
-      for buffering added documents and deletions before they are
-      flushed to the Directory.  -->
-    <ramBufferSizeMB>32</ramBufferSizeMB>
-    <!-- <maxMergeDocs>2147483647</maxMergeDocs> -->
-    <maxFieldLength>10000</maxFieldLength>
-    <writeLockTimeout>1000</writeLockTimeout>
-    <commitLockTimeout>10000</commitLockTimeout>
-    <lockType>native</lockType>
-    
-    <!-- options specific to the main on-disk lucene index -->
-    <useCompoundFile>false</useCompoundFile>
-    <ramBufferSizeMB>32</ramBufferSizeMB>
-    <mergeFactor>10</mergeFactor>
-    <unlockOnStartup>true</unlockOnStartup>
-    <reopenReaders>true</reopenReaders>
-    <deletionPolicy class="solr.SolrDeletionPolicy">
-      <!-- The number of commit points to be kept -->
-      <str name="maxCommitsToKeep">1</str>
-      <!-- The number of optimized commit points to be kept -->
-      <str name="maxOptimizedCommitsToKeep">0</str>
-    </deletionPolicy>
-
-    <!--  To aid in advanced debugging, you may turn on IndexWriter debug logging.
-      Setting to true will set the file that the underlying Lucene IndexWriter
-      will write its debug infostream to.  -->
-     <infoStream file="INFOSTREAM.txt">false</infoStream> 
+   <!-- see Solr example solrconfig.xml for options -->
 
   </indexConfig> 
 
@@ -83,6 +49,7 @@
   <updateHandler class="solr.DirectUpdateHandler2" />
   
   <query>
+    <!-- Set high but probably not needed this high any more -->
     <maxBooleanClauses>8192</maxBooleanClauses>
 
     <filterCache
@@ -129,7 +96,7 @@
          requests or to gain autowarming data from. -->
     <listener event="firstSearcher" class="solr.QuerySenderListener">
       <arr name="queries">
-        <lst> <str name="q">hello</str><str name="start">0</str><str name="rows">10</str></lst>
+        <!--<lst> <str name="q">hello</str><str name="start">0</str><str name="rows">10</str></lst>-->
       </arr>
     </listener>
 
@@ -146,27 +113,15 @@
 
   </query>
 
-  <!-- 
-    Let the dispatch filter handler /select?qt=XXX
-    handleSelect=true will use consistent error handling for /select and /update
-    handleSelect=false will use solr1.1 style error formatting
-    -->
-  <requestDispatcher handleSelect="true" >
+
+  <requestDispatcher handleSelect="false" >
     <!--Make sure your system has some authentication before enabling remote streaming!  -->
     <requestParsers enableRemoteStreaming="true" multipartUploadLimitInKB="2048000" />
     <httpCaching lastModifiedFrom="openTime" etagSeed="Solr" />
   </requestDispatcher>
 
 
-  <!-- requestHandler plugins... incoming queries will be dispatched to the
-     correct handler based on the path or the qt (query type) param.
-     Names starting with a '/' are accessed with the a path equal to the 
-     registered name.  Names without a leading '/' are accessed with:
-      http://host/app/select?qt=name
-     If no qt is defined, the requestHandler that declares default="true"
-     will be used.
-  -->
-  <requestHandler name="standard" class="solr.SearchHandler" default="true">
+  <requestHandler name="/select" class="solr.SearchHandler">
     <!-- default values for query parameters -->
      <lst name="defaults">
        <str name="echoParams">explicit</str>
@@ -179,12 +134,6 @@
   </requestHandler>
   
 
-  <!-- DisMaxRequestHandler allows easy searching across multiple fields
-       for simple user-entered phrases.  It's implementation is now
-       just the standard SearchHandler with a default query type
-       of "dismax". 
-       see http://wiki.apache.org/solr/DisMaxRequestHandler
-   -->
   <requestHandler name="dismax" class="solr.SearchHandler" >
     <lst name="defaults">
      <str name="defType">dismax</str>
@@ -212,12 +161,12 @@
 
 
   <!-- spatial
-   Only needed for an SpatialDemoUpdateProcessorFactory which copies  spatial objects from field "quad"
+   Only needed for an SpatialDemoUpdateProcessorFactory which copies  spatial objects from one field
     to other spatial fields in object form to avoid redundant/inefficient string to spatial object de-serialization.
    -->
   <updateRequestProcessorChain name="spatial">
     <processor class="com.spatial4j.demo.solr.SpatialDemoUpdateProcessorFactory">
-      <str name="shapeField">geo</str>
+      <str name="shapeField">shape</str>
     </processor>
     <processor class="solr.LogUpdateProcessorFactory" />
     <processor class="solr.RunUpdateProcessorFactory" />
@@ -239,7 +188,7 @@
 
   <!-- config for the admin interface -->
   <admin>
-    <defaultQuery>solr</defaultQuery>
+    <defaultQuery>*:*</defaultQuery>
 
     <!-- configure a healthcheck file for servers behind a loadbalancer
     <healthcheck type="file">server-enabled</healthcheck>

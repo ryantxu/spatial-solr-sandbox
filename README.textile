@@ -20,6 +20,4 @@ Discuss on the "Spatial4j mailing list":http://spatial4j.16575.n6.nabble.com/ if
 
 h2. History
 
-"Spatial Solr Sandbox" began life as "Lucene Spatial Playground":http://code.google.com/p/lucene-spatial-playground/
-(LSP) which was migrated to "Spatial4j":https://github.com/spatial4j/spatial4j. It was then broken up such that
-the demo + some Lucene/Solr spatial extras were migrated to a new repository -- this one.  The vast majority of this code that remains was written by Ryan McKinley.
+"Spatial Solr Sandbox" began life as part of "Lucene Spatial Playground":http://code.google.com/p/lucene-spatial-playground/ (LSP).  LSP was migrated to "Spatial4j":https://github.com/spatial4j/spatial4j. It was then broken up such that the demo + some Lucene/Solr spatial extras were migrated to a new repository -- this one.  The vast majority of this code that remains was written by Ryan McKinley.
