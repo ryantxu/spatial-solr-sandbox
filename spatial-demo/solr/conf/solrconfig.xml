@@ -39,7 +39,7 @@
 
 
   <indexConfig>
-   <!-- see Solr example solrconfig.xml for options -->
+    <!-- see Solr example solrconfig.xml for options -->
 
   </indexConfig> 
 

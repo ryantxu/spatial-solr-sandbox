@@ -8,7 +8,9 @@ import com.spatial4j.demo.KMLHelper;
 import com.spatial4j.demo.app.WicketApplication;
 import de.micromata.opengis.kml.v_2_2_0.Kml;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.lucene.spatial.prefix.tree.GeohashPrefixTree;
+import org.apache.lucene.spatial.prefix.tree.Node;
 import org.apache.lucene.spatial.prefix.tree.QuadPrefixTree;
 import org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree;
 import org.apache.lucene.spatial.query.SpatialArgs;
@@ -66,7 +68,8 @@ public class GridInfoServlet extends HttpServlet
         while( reader.hasNext() ) {
           SampleData data = reader.next();
           if( country.equalsIgnoreCase( data.id ) ) {
-            name = data.name;
+            if (StringUtils.isEmpty(name))
+              name = data.name;
             shape = ctx.readShape( data.shape );
             break;
           }
@@ -114,8 +117,16 @@ public class GridInfoServlet extends HttpServlet
     double distErrPct = getDoubleParam(req, "distErrPct", SpatialArgs.DEFAULT_DISTERRPCT);
     double distErr = args.resolveDistErr(grid.getSpatialContext(), distErrPct);
     int detailLevel = grid.getLevelForDistance(distErr);
-    log("Using detail level "+detailLevel);
-    List<String> info = SpatialPrefixTree.nodesToTokenStrings(grid.getNodes(shape, detailLevel, false));
+    List<Node> nodes = grid.getNodes(shape, detailLevel, false);
+
+    int biggestLevel = 100;
+    for (Node node : nodes) {
+      biggestLevel = Math.min(biggestLevel, node.getLevel());
+    }
+    String msg = "Using detail level " + detailLevel + " (biggest is " + biggestLevel + ") yielding " + nodes.size() + " tokens.";
+    log(msg);
+
+    List<String> info = SpatialPrefixTree.nodesToTokenStrings(nodes);
     String format = req.getParameter( "format" );
     if( "kml".equals( format ) ) {
       if( name == null || name.length() < 2 ) {
@@ -131,7 +142,7 @@ public class GridInfoServlet extends HttpServlet
 
     res.setContentType( "text/plain" );
     PrintStream out = new PrintStream( res.getOutputStream() );
-    out.println("Number of tokens: "+info.size());
+    out.println(msg);
     out.println( info.toString() );
   }
 }

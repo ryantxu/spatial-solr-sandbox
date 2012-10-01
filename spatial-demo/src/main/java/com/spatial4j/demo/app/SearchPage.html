@@ -47,6 +47,7 @@
       var ccc = box.getCenterLonLat();
       var ppp = new OpenLayers.Geometry.Point( ccc.lon, ccc.lat );
       var dist = ppp.distanceTo( feature.geometry );
+      var distDegrees = dist / 111.2; // km to degrees
       
       //do something with polygon
       $('#geo').val( "Circle("+ccc.lon+" "+ccc.lat+" d="+dist+")" );
@@ -200,19 +201,14 @@
         </ul>
         
         <div>
-          <b>Min</b><br/>
-          <input wicket:id="min" type="text" />
-        </div>
-
-        <div>
-          <b>Max</b><br/>
-          <input wicket:id="max" type="text" />
+          <b>distErrPct</b><br/>
+          <input wicket:id="distErrPct" type="text" />
         </div>
 
         <br/>
         <div>
           <input wicket:id="score" type="checkbox" id="checkScore" />
-          <label for="checkScore">Score</label> (not used right now)
+          <label for="checkScore">Score=distance</label>
         </div>
         <br/>
         <div>
