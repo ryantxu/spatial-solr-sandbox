@@ -163,6 +163,9 @@
   <profiles>
     <profile>
       <id>updateLucene</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
       <repositories>
         <!-- for Lucene -->
         <repository>
