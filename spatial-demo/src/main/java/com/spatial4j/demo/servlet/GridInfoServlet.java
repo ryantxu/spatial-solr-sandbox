@@ -56,8 +56,12 @@ public class GridInfoServlet extends HttpServlet
   }
 
   @Override
-  public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException
-  {
+  protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    doPost(req, resp);
+  }
+
+  @Override
+  protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
     String name = req.getParameter( "name" );
     Shape shape = null;
     String country = req.getParameter( "country" );
