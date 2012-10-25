@@ -245,8 +245,9 @@ public class SearchPage extends WebPage
                   "http://localhost:8080/solr", 20, 3 );
               
               // single thread
-             // sss = new CommonsHttpSolrServer("http://localhost:8080/solr");
-              
+              if(false) {
+                sss = solr; // new HttpSolrServer("http://localhost:8080/solr");
+              }
               loader.loadSampleData( data, sss );
             }
             catch (Exception e) {
