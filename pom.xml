@@ -1,17 +1,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  
-  <parent>
-    <groupId>org.sonatype.oss</groupId>
-    <artifactId>oss-parent</artifactId>
-    <version>7</version>
-  </parent>
 
   <groupId>spatial-solr-sandbox</groupId>
-  <artifactId>parent</artifactId>
+  <artifactId>spatial-solr-sandbox</artifactId>
   <version>0.3-SNAPSHOT</version>
   <packaging>pom</packaging>
-  <name>spatial4j-parent</name>
 
   <properties>
     <!-- this magic system property is honored by many plugins: http://docs.codehaus.org/display/MAVENUSER/POM+Element+for+Source+File+Encoding -->
