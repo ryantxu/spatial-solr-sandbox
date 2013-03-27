@@ -16,12 +16,13 @@
  */
 package org.apache.lucene.spatial.pending.jts;
 
-import java.io.IOException;
-
+import com.spatial4j.core.context.jts.JtsSpatialContext;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.io.ParseException;
+import com.vividsolutions.jts.io.WKBReader;
 import org.apache.lucene.index.AtomicReader;
 import org.apache.lucene.index.AtomicReaderContext;
-import org.apache.lucene.index.DocValues;
-import org.apache.lucene.index.DocValues.Source;
+import org.apache.lucene.index.SortedDocValues;
 import org.apache.lucene.search.DocIdSet;
 import org.apache.lucene.search.Filter;
 import org.apache.lucene.util.Bits;
@@ -30,10 +31,7 @@ import org.apache.lucene.util.OpenBitSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.spatial4j.core.context.jts.JtsSpatialContext;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.io.ParseException;
-import com.vividsolutions.jts.io.WKBReader;
+import java.io.IOException;
 
 
 public class GeometryOperationFilter extends Filter {
@@ -43,14 +41,14 @@ public class GeometryOperationFilter extends Filter {
   final String fieldName;
   final JtsSpatialContext ctx;
   final GeometryTest tester;
-  final WKBReader reader;
+  final WKBReader wkbReader;
   final BytesRefStream bstream;
 
   public GeometryOperationFilter(String fieldName, GeometryTest tester, JtsSpatialContext ctx) {
     this.fieldName = fieldName;
     this.ctx = ctx;
     this.tester = tester;
-    this.reader = new WKBReader(ctx.getGeometryFactory());
+    this.wkbReader = new WKBReader(ctx.getGeometryFactory());
 
     BytesRef bytes = new BytesRef(10000);
     this.bstream = new BytesRefStream(bytes);
@@ -58,21 +56,22 @@ public class GeometryOperationFilter extends Filter {
 
   @Override
   public DocIdSet getDocIdSet(final AtomicReaderContext context, final Bits acceptDocs) throws IOException {
-    OpenBitSet bits = new OpenBitSet();
     AtomicReader areader = context.reader();
 
-    DocValues vals = areader.docValues(fieldName);
-    Source src = vals.getDirectSource(); // read off disk (not in RAM)
+    SortedDocValues sortedDocValues = areader.getSortedDocValues(fieldName);
+    if (sortedDocValues == null)
+      return null;
 
-    // TODO??? is this really the best way?  this checks *every* document -- even if some share the same value.  perhaps use sorted?
+    OpenBitSet bits = new OpenBitSet(areader.maxDoc());
+
     BytesRef bytes = bstream.getBytesRef();
     for( int docID=0; docID<areader.maxDoc(); docID++ ) {
       if( acceptDocs == null || acceptDocs.get(docID)) {
-        bytes = src.getBytes(docID, bytes);
+        sortedDocValues.get(docID, bytes);
         if(bytes.length > 0) {
           try {
             bstream.setBytesRef(bytes); // likely the same
-            Geometry geo = reader.read(bstream);
+            Geometry geo = wkbReader.read(bstream);
 
             if (tester.matches(geo)) {
               bits.set(docID);

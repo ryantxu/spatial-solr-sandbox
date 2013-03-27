@@ -172,7 +172,7 @@ public class KMLHelper
 
   //  shape = new RectangleImpl( -170,-85, 170, 85 );
 
-    List<String> vals = SpatialPrefixTree.nodesToTokenStrings(grid.getNodes(shape,5,false)); //new GeometryShape( shape ) ); //new EnvelopeShape( shape.getEnvelopeInternal() ) );
+    List<String> vals = SpatialPrefixTree.nodesToTokenStrings(grid.getNodes(shape,5,false,true)); //new GeometryShape( shape ) ); //new EnvelopeShape( shape.getEnvelopeInternal() ) );
     System.out.println( vals );
 
 //    StringBuilder str = new StringBuilder();

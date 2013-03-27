@@ -24,8 +24,8 @@ import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.io.WKBWriter;
 import com.vividsolutions.jts.simplify.TopologyPreservingSimplifier;
-import org.apache.lucene.document.DerefBytesDocValuesField;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.SortedDocValuesField;
 import org.apache.lucene.queries.function.ValueSource;
 import org.apache.lucene.search.Filter;
 import org.apache.lucene.spatial.SpatialStrategy;
@@ -77,7 +77,7 @@ public class JtsGeoStrategy extends SpatialStrategy {
       }
     }
 
-    return new Field[]{new DerefBytesDocValuesField(getFieldName(), wkb)};
+    return new Field[]{new SortedDocValuesField(getFieldName(), wkb)};
   }
 
   @Override

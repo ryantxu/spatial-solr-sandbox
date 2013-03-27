@@ -121,7 +121,7 @@ public class GridInfoServlet extends HttpServlet
     double distErrPct = getDoubleParam(req, "distErrPct", SpatialArgs.DEFAULT_DISTERRPCT);
     double distErr = args.resolveDistErr(grid.getSpatialContext(), distErrPct);
     int detailLevel = grid.getLevelForDistance(distErr);
-    List<Node> nodes = grid.getNodes(shape, detailLevel, false);
+    List<Node> nodes = grid.getNodes(shape, detailLevel, false, true);
 
     int biggestLevel = 100;
     for (Node node : nodes) {

@@ -350,7 +350,7 @@ public class SearchPage extends WebPage
         SpatialArgs args = new SpatialArgs(SpatialOperation.Intersects, shape);
         double distErr = args.resolveDistErr(grid.getSpatialContext(), SpatialArgs.DEFAULT_DISTERRPCT);
         int detailLevel = grid.getLevelForDistance(distErr);
-        List<Node> cells = grid.getNodes(shape, detailLevel, false);//false = no intermediates
+        List<Node> cells = grid.getNodes(shape, detailLevel, false, true);//false = no intermediates
         List<String> tokens = SpatialPrefixTree.nodesToTokenStrings(cells);
         return KMLHelper.toKML(name, grid, tokens);
       }
