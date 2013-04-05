@@ -7,8 +7,8 @@ import com.spatial4j.demo.KMLHelper;
 import com.spatial4j.demo.SampleDataLoader;
 import de.micromata.opengis.kml.v_2_2_0.Kml;
 import org.apache.commons.lang.time.DurationFormatUtils;
+import org.apache.lucene.spatial.prefix.tree.Cell;
 import org.apache.lucene.spatial.prefix.tree.GeohashPrefixTree;
-import org.apache.lucene.spatial.prefix.tree.Node;
 import org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree;
 import org.apache.lucene.spatial.query.SpatialArgs;
 import org.apache.lucene.spatial.query.SpatialOperation;
@@ -350,8 +350,8 @@ public class SearchPage extends WebPage
         SpatialArgs args = new SpatialArgs(SpatialOperation.Intersects, shape);
         double distErr = args.resolveDistErr(grid.getSpatialContext(), SpatialArgs.DEFAULT_DISTERRPCT);
         int detailLevel = grid.getLevelForDistance(distErr);
-        List<Node> cells = grid.getNodes(shape, detailLevel, false, true);//false = no intermediates
-        List<String> tokens = SpatialPrefixTree.nodesToTokenStrings(cells);
+        List<Cell> cells = grid.getCells(shape, detailLevel, false, true);//false = no intermediates
+        List<String> tokens = SpatialPrefixTree.cellsToTokenStrings(cells);
         return KMLHelper.toKML(name, grid, tokens);
       }
     }

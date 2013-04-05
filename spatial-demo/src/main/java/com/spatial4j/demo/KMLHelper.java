@@ -17,7 +17,7 @@ import de.micromata.opengis.kml.v_2_2_0.Placemark;
 import de.micromata.opengis.kml.v_2_2_0.PolyStyle;
 import de.micromata.opengis.kml.v_2_2_0.StyleMap;
 import de.micromata.opengis.kml.v_2_2_0.StyleState;
-import org.apache.lucene.spatial.prefix.tree.Node;
+import org.apache.lucene.spatial.prefix.tree.Cell;
 import org.apache.lucene.spatial.prefix.tree.QuadPrefixTree;
 import org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree;
 
@@ -80,7 +80,7 @@ public class KMLHelper
 
   private static Placemark create( String key, String style, SpatialPrefixTree grid )
   {
-    final Node cell = grid.getNode(key);
+    final Cell cell = grid.getCell(key);
     Shape r = cell.getShape();
     List<Coordinate> coords = getCoords( r );
 
@@ -109,7 +109,7 @@ public class KMLHelper
     Folder folder = document.createAndAddFolder().withName( "tokens" );
     for( CharSequence t : tokens ) {
       String token = t.toString();
-      String style = token.charAt(token.length()-1) == (char) Node.LEAF_BYTE ? "#ccc" : "#mmm";
+      String style = token.charAt(token.length()-1) == (char) Cell.LEAF_BYTE ? "#ccc" : "#mmm";
       folder.getFeature().add( create( token, style, grid ) );
     }
     return kml;
@@ -172,7 +172,7 @@ public class KMLHelper
 
   //  shape = new RectangleImpl( -170,-85, 170, 85 );
 
-    List<String> vals = SpatialPrefixTree.nodesToTokenStrings(grid.getNodes(shape,5,false,true)); //new GeometryShape( shape ) ); //new EnvelopeShape( shape.getEnvelopeInternal() ) );
+    List<String> vals = SpatialPrefixTree.cellsToTokenStrings(grid.getCells(shape,5,false,true)); //new GeometryShape( shape ) ); //new EnvelopeShape( shape.getEnvelopeInternal() ) );
     System.out.println( vals );
 
 //    StringBuilder str = new StringBuilder();

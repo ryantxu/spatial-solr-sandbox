@@ -9,8 +9,8 @@ import com.spatial4j.demo.app.WicketApplication;
 import de.micromata.opengis.kml.v_2_2_0.Kml;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.lucene.spatial.prefix.tree.Cell;
 import org.apache.lucene.spatial.prefix.tree.GeohashPrefixTree;
-import org.apache.lucene.spatial.prefix.tree.Node;
 import org.apache.lucene.spatial.prefix.tree.QuadPrefixTree;
 import org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree;
 import org.apache.lucene.spatial.query.SpatialArgs;
@@ -121,16 +121,16 @@ public class GridInfoServlet extends HttpServlet
     double distErrPct = getDoubleParam(req, "distErrPct", SpatialArgs.DEFAULT_DISTERRPCT);
     double distErr = args.resolveDistErr(grid.getSpatialContext(), distErrPct);
     int detailLevel = grid.getLevelForDistance(distErr);
-    List<Node> nodes = grid.getNodes(shape, detailLevel, false, true);
+    List<Cell> nodes = grid.getCells(shape, detailLevel, false, true);
 
     int biggestLevel = 100;
-    for (Node node : nodes) {
+    for (Cell node : nodes) {
       biggestLevel = Math.min(biggestLevel, node.getLevel());
     }
     String msg = "Using detail level " + detailLevel + " (biggest is " + biggestLevel + ") yielding " + nodes.size() + " tokens.";
     log(msg);
 
-    List<String> info = SpatialPrefixTree.nodesToTokenStrings(nodes);
+    List<String> info = SpatialPrefixTree.cellsToTokenStrings(nodes);
     String format = req.getParameter( "format" );
     if( "kml".equals( format ) ) {
       if( name == null || name.length() < 2 ) {
