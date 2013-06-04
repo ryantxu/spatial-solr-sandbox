@@ -22,6 +22,13 @@
       <artifactId>lse</artifactId>
       <version>${project.version}</version>
     </dependency>
+
+    <!-- Lets use the latest & greatest Spatial4j
+    <dependency>
+      <groupId>com.spatial4j</groupId>
+      <artifactId>spatial4j</artifactId>
+      <version>0.4-SNAPSHOT</version>
+    </dependency> -->
     
     <dependency>
       <groupId>com.google.guava</groupId>
