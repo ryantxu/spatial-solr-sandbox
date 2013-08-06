@@ -81,7 +81,7 @@ public class JtsGeoStrategy extends SpatialStrategy {
   }
 
   @Override
-  public ValueSource makeDistanceValueSource(Point queryPoint) {
+  public ValueSource makeDistanceValueSource(Point queryPoint, double multiplier) {
     throw new UnsupportedOperationException();
   }
 
