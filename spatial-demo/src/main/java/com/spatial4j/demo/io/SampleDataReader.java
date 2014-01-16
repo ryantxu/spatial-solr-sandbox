@@ -17,8 +17,6 @@
 
 package com.spatial4j.demo.io;
 
-import com.spatial4j.core.io.LineReader;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;

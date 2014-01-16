@@ -1,11 +1,11 @@
 package com.spatial4j.demo.servlet;
 
 import com.spatial4j.core.context.jts.JtsSpatialContext;
-import com.spatial4j.core.io.sample.SampleData;
-import com.spatial4j.core.io.sample.SampleDataReader;
 import com.spatial4j.core.shape.Shape;
 import com.spatial4j.demo.KMLHelper;
 import com.spatial4j.demo.app.WicketApplication;
+import com.spatial4j.demo.io.SampleData;
+import com.spatial4j.demo.io.SampleDataReader;
 import de.micromata.opengis.kml.v_2_2_0.Kml;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;

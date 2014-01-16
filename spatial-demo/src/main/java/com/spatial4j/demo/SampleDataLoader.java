@@ -1,7 +1,7 @@
 package com.spatial4j.demo;
 
-import com.spatial4j.core.io.sample.SampleData;
-import com.spatial4j.core.io.sample.SampleDataReader;
+import com.spatial4j.demo.io.SampleData;
+import com.spatial4j.demo.io.SampleDataReader;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.common.SolrInputDocument;
 import org.slf4j.Logger;
