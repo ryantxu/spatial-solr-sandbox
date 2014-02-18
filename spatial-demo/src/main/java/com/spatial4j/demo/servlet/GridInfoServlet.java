@@ -1,6 +1,8 @@
 package com.spatial4j.demo.servlet;
 
+import com.spatial4j.core.context.SpatialContextFactory;
 import com.spatial4j.core.context.jts.JtsSpatialContext;
+import com.spatial4j.core.context.jts.JtsSpatialContextFactory;
 import com.spatial4j.core.shape.Shape;
 import com.spatial4j.demo.KMLHelper;
 import com.spatial4j.demo.app.WicketApplication;
@@ -25,12 +27,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 public class GridInfoServlet extends HttpServlet
 {
-  JtsSpatialContext ctx = JtsSpatialContext.GEO;
 
   @Override
   public void init(ServletConfig config) throws ServletException {
@@ -62,6 +65,18 @@ public class GridInfoServlet extends HttpServlet
 
   @Override
   protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+    //Initialize the SpatialContext from the request parameters.
+    JtsSpatialContext ctx;
+    HashMap<String, String> ctxParams = new HashMap<String, String>();
+    ctxParams.put("spatialContextFactory", JtsSpatialContextFactory.class.getName());
+    ctxParams.put("geo", "true");
+    ctxParams.put("normWrapLongitude", "true");//our country dataset needs this
+    for (Map.Entry<String, String[]> entry : req.getParameterMap().entrySet()) {
+      ctxParams.put(entry.getKey(), (entry.getValue())[0]);
+    }
+    ctx = (JtsSpatialContext) SpatialContextFactory.makeSpatialContext(ctxParams, getClass().getClassLoader());
+
+    //
     String name = req.getParameter( "name" );
     Shape shape = null;
     String country = req.getParameter( "country" );
@@ -104,9 +119,9 @@ public class GridInfoServlet extends HttpServlet
 
     // If they don't set a country, then use the input
     if( shape == null ) {
-      String geo = req.getParameter( "geo" );
+      String geo = req.getParameter( "geometry" );
       if( geo == null ) {
-        res.sendError(HttpServletResponse.SC_BAD_REQUEST, "missing parameter: 'geo'" );
+        res.sendError(HttpServletResponse.SC_BAD_REQUEST, "missing parameter: 'geometry'" );
         return;
       }
       try {
@@ -138,7 +153,7 @@ public class GridInfoServlet extends HttpServlet
       }
       Kml kml = KMLHelper.toKML( name, grid, info );
 
-      res.setHeader("Content-Disposition","attachment; filename=\"" + name + "\";");
+      res.setHeader("Content-Disposition","attachment; filename=\"" + name + ".kml\";");
       res.setContentType( "application/vnd.google-earth.kml+xml" );
       kml.marshal( res.getOutputStream() );
       return;
