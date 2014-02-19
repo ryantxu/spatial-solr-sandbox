@@ -26,6 +26,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.text.ParseException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -70,6 +71,7 @@ public class GridInfoServlet extends HttpServlet
     HashMap<String, String> ctxParams = new HashMap<String, String>();
     ctxParams.put("spatialContextFactory", JtsSpatialContextFactory.class.getName());
     ctxParams.put("geo", "true");
+    ctxParams.put("autoIndex", "true");
     ctxParams.put("normWrapLongitude", "true");//our country dataset needs this
     for (Map.Entry<String, String[]> entry : req.getParameterMap().entrySet()) {
       ctxParams.put(entry.getKey(), (entry.getValue())[0]);
@@ -89,10 +91,14 @@ public class GridInfoServlet extends HttpServlet
           if( country.equalsIgnoreCase( data.id ) ) {
             if (StringUtils.isEmpty(name))
               name = data.name;
-            shape = ctx.readShape( data.shape );
+            shape = ctx.readShapeFromWkt(data.shape);
             break;
           }
         }
+      } catch (ParseException e) {
+        log(e.toString(), e);
+        res.sendError(HttpServletResponse.SC_BAD_REQUEST, e.toString());
+        return;
       } finally {
         IOUtils.closeQuietly(in);
       }
@@ -125,11 +131,12 @@ public class GridInfoServlet extends HttpServlet
         return;
       }
       try {
-        shape = ctx.readShape( geo );
+        shape = ctx.readShapeFromWkt(geo);
       }
       catch( Exception ex ) {
         ex.printStackTrace();
         res.sendError(HttpServletResponse.SC_BAD_REQUEST, "error parsing geo: "+ex );
+        return;
       }
     }
     SpatialArgs args = new SpatialArgs(SpatialOperation.Intersects, shape);
