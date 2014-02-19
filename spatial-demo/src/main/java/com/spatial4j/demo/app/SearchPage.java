@@ -159,7 +159,7 @@ public class SearchPage extends WebPage
             row.add( new Label( "score", doc.getFieldValue( "score" )+"" ));
             row.add( new ExternalLink( "link", "/solr/select?q=id:"+ClientUtils.escapeQueryChars(id) ));
 
-            row.add( addKmlLink( "kml", id, "geohash" ));
+            row.add( addKmlLink( "kml", id, "shape" ));
             rv.add( row );
           }
         }
