@@ -2,7 +2,11 @@ package com.spatial4j.demo.solr;
 
 import com.spatial4j.core.context.SpatialContext;
 import com.spatial4j.core.context.SpatialContextFactory;
+import com.spatial4j.core.context.jts.JtsSpatialContext;
 import com.spatial4j.core.shape.Shape;
+import com.spatial4j.core.shape.ShapeCollection;
+import com.spatial4j.core.shape.jts.JtsGeometry;
+import com.vividsolutions.jts.geom.*;
 import org.apache.solr.common.SolrInputField;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.request.SolrQueryRequest;
@@ -14,9 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 
 public class SpatialDemoUpdateProcessorFactory extends UpdateRequestProcessorFactory
@@ -56,44 +58,77 @@ public class SpatialDemoUpdateProcessorFactory extends UpdateRequestProcessorFac
     @Override
     public void processAdd(AddUpdateCommand cmd) throws IOException
     {
-      // This converts the 'geo' field to a shape
-      SolrInputField shapeField = cmd.solrDoc.get( sourceFieldName );
+      // This parses the shape string into a shape object, and it copies them to the various
+      //  spatial fields we have, making some modifications as needed.
+      final SolrInputField shapeField = cmd.solrDoc.get( sourceFieldName );
       if( shapeField != null ) {
         if( shapeField.getValueCount() > 1 ) {
           throw new RuntimeException( "multiple values found for 'geometry' field: "+shapeField.getValue() );
         }
-        if( !(shapeField.getValue() instanceof Shape) ) {
-          Shape shape;
-          try {
-            shape = ctx.readShapeFromWkt(shapeField.getValue().toString());
-          } catch (Exception e) {
-            log.error("Couldn't read shape with id "+cmd.getPrintableId(), e);
-            return;//skip doc
-          }
-          float boost = shapeField.getBoost();
-
-          //Work-around that SolrInputField treats Collection as multi-value due to ShapeCollection
-          if (shape instanceof Collection)
-            shape = new ShapeWrapper(shape);// http://issues.apache.org/jira/browse/SOLR-4329
-
-          // TODO lookup field types that subclass AbstractSpatialFieldType
-
-          if (!(shape instanceof ShapeWrapper)) {
-            addField(cmd, "geo", shape, boost);//this field type only accepts JtsGeometry shape
-          } else {
-            log.info("Didn't add a shape {} to field 'geo' because was a collection.", cmd.getPrintableId());
-          }
-
-          addField(cmd, "geohash", shape, boost);
-          addField(cmd, "quad", shape, boost);
-          addField(cmd, "bbox", shape.getBoundingBox(), boost);
-          addField(cmd, "ptvector", shape.getCenter(), boost);
+        final String wkt = shapeField.getValue().toString();
+        Shape shape;
+        try {
+          shape = ctx.readShapeFromWkt(wkt);
+        } catch (Exception e) {
+          log.error("Couldn't parse shape for doc "+cmd.getPrintableId(), e);
+          return;//skip doc
         }
+        final float boost = shapeField.getBoost();
+
+        //The "geo" shape only accepts JtsGeometry
+        JtsGeometry jtsGeom = toJtsGeom(shape);
+        //log.warn("Couldn't index into 'geo' field for doc {}; got class {}", cmd.getPrintableId(), shape.getClass());
+        addField(cmd, "geo", jtsGeom, boost);
+
+        addField(cmd, "bbox", shape.getBoundingBox(), boost);
+        addField(cmd, "ptvector", shape.getCenter(), boost);
+
+        //Work-around that SolrInputField treats Collection as multi-value due to ShapeCollection
+        if (shape instanceof Collection)
+          shape = new ShapeWrapper(shape); // http://issues.apache.org/jira/browse/SOLR-4329
+
+        addField(cmd, "geohash", shape, boost);
+        addField(cmd, "quad", shape, boost);
+
       }
       super.processAdd(cmd);
     }
 
-    private void addField(AddUpdateCommand cmd, String name, Shape shape, float boost) {
+    private JtsGeometry toJtsGeom(Shape shape) {
+      //TODO move this to a Spatial4j utility class?
+      if (shape instanceof JtsGeometry)
+        return (JtsGeometry) shape;
+      JtsSpatialContext jtsCtx = (JtsSpatialContext) ctx;
+      final Geometry geom;
+      if (shape instanceof ShapeCollection) {
+        ShapeCollection coll = (ShapeCollection) shape;
+        //assume a collection of Polygons... convert to JtsGeometry
+        //TODO handle other MULTI shapes?
+        final List<Polygon> polygonList = new ArrayList<>(coll.size());
+        for (int i = 0; i < coll.size(); i++) {
+          final Geometry geomI = jtsCtx.getGeometryFrom(coll.get(i));
+          if (geomI instanceof Polygon)
+            polygonList.add((Polygon)geomI);
+          else if (geomI instanceof MultiPolygon) {//happens when a polygon crosses the dateline; it gets split
+            MultiPolygon multiPolygon = (MultiPolygon) geomI;
+            multiPolygon.apply(new GeometryFilter() {
+              @Override
+              public void filter(Geometry geom) {
+                if (geom instanceof MultiPolygon)
+                  return;//caller will recurse
+                polygonList.add((Polygon)geom);
+              }
+            });
+          }
+        }
+        geom = jtsCtx.getGeometryFactory().createMultiPolygon(polygonList.toArray(new Polygon[polygonList.size()]));
+      } else {
+        geom = jtsCtx.getGeometryFrom(shape);
+      }
+      return jtsCtx.makeShape(geom, true, true);
+    }
+
+    private void addField(AddUpdateCommand cmd, String name, Object shape, float boost) {
       SolrInputField field = new SolrInputField(name);
       field.setValue(shape, boost);
       cmd.solrDoc.put(field.getName(), field);

@@ -175,8 +175,11 @@
         parser, you get a ShapeCollection, which is problematic for Solr's SolrInputField which
         treats Collection as multi-valued, which can then create a problem for certain field types.
         It's a real P.I.T.A.: http://issues.apache.org/jira/browse/SOLR-4329
+
+        This is commented out because the URP converts ShapeCollection -> JtsGeometry or
+        ShapeWrapper as a work-around. Either way works.
         -->
-        <str name="wktShapeParserClass">com.spatial4j.core.io.jts.JtsWKTReaderShapeParser</str>
+        <!--<str name="wktShapeParserClass">com.spatial4j.core.io.jts.JtsWKTReaderShapeParser</str>-->
         <bool name="normWrapLongitude">true</bool>
         <bool name="autoIndex">true</bool>
       </lst>
