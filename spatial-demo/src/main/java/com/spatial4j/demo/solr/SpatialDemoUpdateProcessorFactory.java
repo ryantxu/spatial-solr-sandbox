@@ -14,7 +14,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 
 public class SpatialDemoUpdateProcessorFactory extends UpdateRequestProcessorFactory
@@ -25,18 +27,23 @@ public class SpatialDemoUpdateProcessorFactory extends UpdateRequestProcessorFac
 
   private String sourceFieldName;
 
+  @SuppressWarnings("unchecked")
   @Override
   public void init(NamedList args)
   {
     sourceFieldName = (String) args.get("shapeField");
+
+    final NamedList spatialContextNL = (NamedList<Object>) args.get("SpatialContext");
+    Map<String,String> ctxMap = new LinkedHashMap<>();
+    for (Map.Entry entry : (Iterable<Map.Entry>)spatialContextNL) {
+      ctxMap.put((String) entry.getKey(), entry.getValue().toString());
+    }
+    ctx = SpatialContextFactory.makeSpatialContext(ctxMap, null);
   }
 
   @Override
   public DemoUpdateProcessor getInstance(SolrQueryRequest req, SolrQueryResponse rsp, UpdateRequestProcessor next)
   {
-    if (ctx == null) {
-      ctx = SpatialContextFactory.makeSpatialContext(Collections.<String, String>emptyMap(), req.getCore().getResourceLoader().getClassLoader());
-    }
     return new DemoUpdateProcessor(next);
   }
 
@@ -58,37 +65,38 @@ public class SpatialDemoUpdateProcessorFactory extends UpdateRequestProcessorFac
         if( !(shapeField.getValue() instanceof Shape) ) {
           Shape shape;
           try {
-            shape = ctx.readShape( shapeField.getValue().toString() );
+            shape = ctx.readShapeFromWkt(shapeField.getValue().toString());
           } catch (Exception e) {
             log.error("Couldn't read shape with id "+cmd.getPrintableId(), e);
             return;//skip doc
           }
           float boost = shapeField.getBoost();
 
-          SolrInputField field;
+          //Work-around that SolrInputField treats Collection as multi-value due to ShapeCollection
+          if (shape instanceof Collection)
+            shape = new ShapeWrapper(shape);// http://issues.apache.org/jira/browse/SOLR-4329
 
-          field = new SolrInputField("geo");
-          field.setValue(shape, boost);
-          cmd.solrDoc.put(field.getName(), field);
+          // TODO lookup field types that subclass AbstractSpatialFieldType
 
-          field = new SolrInputField("geohash");
-          field.setValue(shape, boost);
-          cmd.solrDoc.put(field.getName(), field);
+          if (!(shape instanceof ShapeWrapper)) {
+            addField(cmd, "geo", shape, boost);//this field type only accepts JtsGeometry shape
+          } else {
+            log.info("Didn't add a shape {} to field 'geo' because was a collection.", cmd.getPrintableId());
+          }
 
-          field = new SolrInputField("quad");
-          field.setValue(shape, boost);
-          cmd.solrDoc.put(field.getName(), field);
-
-          field = new SolrInputField("bbox");
-          field.setValue(shape.getBoundingBox(), boost);
-          cmd.solrDoc.put(field.getName(), field);
-
-          field = new SolrInputField("ptvector");
-          field.setValue(shape.getCenter(), boost);
-          cmd.solrDoc.put(field.getName(), field);
+          addField(cmd, "geohash", shape, boost);
+          addField(cmd, "quad", shape, boost);
+          addField(cmd, "bbox", shape.getBoundingBox(), boost);
+          addField(cmd, "ptvector", shape.getCenter(), boost);
         }
       }
       super.processAdd(cmd);
+    }
+
+    private void addField(AddUpdateCommand cmd, String name, Shape shape, float boost) {
+      SolrInputField field = new SolrInputField(name);
+      field.setValue(shape, boost);
+      cmd.solrDoc.put(field.getName(), field);
     }
   }
 }

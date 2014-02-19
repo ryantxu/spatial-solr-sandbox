@@ -161,12 +161,25 @@
 
 
   <!-- spatial
-   Only needed for an SpatialDemoUpdateProcessorFactory which copies  spatial objects from one field
-    to other spatial fields in object form to avoid redundant/inefficient string to spatial object de-serialization.
+   SpatialDemoUpdateProcessorFactory is purely an optimization applicable to this demo to avoid
+    redundant/inefficient string to spatial object de-serialization.  You shouldn't care to do this
+    yourself because most apps either have a trivial shape (e.g. a point) or index their shape into
+    one indexed spatial field.
    -->
   <updateRequestProcessorChain name="spatial">
     <processor class="com.spatial4j.demo.solr.SpatialDemoUpdateProcessorFactory">
       <str name="shapeField">shape</str>
+      <lst name="SpatialContext">
+        <str name="spatialContext">com.spatial4j.core.context.jts.JtsSpatialContextFactory</str>
+        <!-- Use JTS's WKTReader as it generates JtsGeometry for MULTI* shapes. With the default
+        parser, you get a ShapeCollection, which is problematic for Solr's SolrInputField which
+        treats Collection as multi-valued, which can then create a problem for certain field types.
+        It's a real P.I.T.A.: http://issues.apache.org/jira/browse/SOLR-4329
+        -->
+        <str name="wktShapeParserClass">com.spatial4j.core.io.jts.JtsWKTReaderShapeParser</str>
+        <bool name="normWrapLongitude">true</bool>
+        <bool name="autoIndex">true</bool>
+      </lst>
     </processor>
     <processor class="solr.LogUpdateProcessorFactory" />
     <processor class="solr.RunUpdateProcessorFactory" />
