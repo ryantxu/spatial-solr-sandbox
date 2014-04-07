@@ -27,6 +27,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -143,16 +145,21 @@ public class GridInfoServlet extends HttpServlet
     double distErrPct = getDoubleParam(req, "distErrPct", SpatialArgs.DEFAULT_DISTERRPCT);
     double distErr = args.resolveDistErr(grid.getSpatialContext(), distErrPct);
     int detailLevel = grid.getLevelForDistance(distErr);
-    List<Cell> nodes = grid.getCells(shape, detailLevel, false, true);
-
-    int biggestLevel = 100;
-    for (Cell node : nodes) {
-      biggestLevel = Math.min(biggestLevel, node.getLevel());
+    List<Cell> allCells = grid.getCells(shape, detailLevel, true, true);
+    int totalCells = allCells.size();
+    List<Cell> leafCells = new ArrayList<>(allCells.size()/2);
+    int biggestLevel = 100;//that is a leaf
+    for (Cell cell : allCells) {
+      if (!cell.isLeaf())
+        continue;
+      leafCells.add(cell);
+      biggestLevel = Math.min(biggestLevel, cell.getLevel());
     }
-    String msg = "Using detail level " + detailLevel + " (biggest is " + biggestLevel + ") yielding " + nodes.size() + " tokens.";
+    String msg = "Using detail level " + detailLevel + " (biggest is " + biggestLevel + ")" +
+            " yielding " + leafCells.size() + " leaf tokens, " + totalCells + " total.";
     log(msg);
 
-    List<String> info = SpatialPrefixTree.cellsToTokenStrings(nodes);
+    List<String> info = cellsToTokenStrings(leafCells);
     String format = req.getParameter( "format" );
     if( "kml".equals( format ) ) {
       if( name == null || name.length() < 2 ) {
@@ -170,5 +177,21 @@ public class GridInfoServlet extends HttpServlet
     PrintStream out = new PrintStream( res.getOutputStream() );
     out.println(msg);
     out.println( info.toString() );
+  }
+
+  /**
+   * Will add the trailing leaf byte for leaves. This isn't particularly efficient.
+   */
+  private static List<String> cellsToTokenStrings(Collection<Cell> cells) {
+    List<String> tokens = new ArrayList<String>((cells.size()));
+    for (Cell cell : cells) {
+      final String token = cell.getTokenString();
+      if (cell.isLeaf()) {
+        tokens.add(token + '+');
+      } else {
+        tokens.add(token);
+      }
+    }
+    return tokens;
   }
 }
