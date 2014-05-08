@@ -16,12 +16,19 @@
   <packaging>war</packaging>
 
   <dependencies>
-    <!-- LUCENE -->
+    <!-- Lucene / Solr -->
     <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>lse</artifactId>
-      <version>${project.version}</version>
+      <groupId>org.apache.solr</groupId>
+      <artifactId>solr-core</artifactId>
+      <version>${lucene.version}</version>
     </dependency>
+
+    <!-- LSE (somewhat optional) -->
+    <!--<dependency>-->
+      <!--<groupId>${project.groupId}</groupId>-->
+      <!--<artifactId>lse</artifactId>-->
+      <!--<version>${project.version}</version>-->
+    <!--</dependency>-->
 
     <!-- Lets use the latest & greatest Spatial4j
     <dependency>

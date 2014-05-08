@@ -31,6 +31,10 @@
   </description>
   <packaging>jar</packaging>
 
+  <properties>
+    <lucene.version>5.0-SNAPSHOT</lucene.version>
+  </properties>
+
   <dependencies>
 
     <!--

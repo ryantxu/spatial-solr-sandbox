@@ -59,8 +59,10 @@
     it ends up in the field type here, so therefore the SpatialContext related init arg attributes
     don't matter much.
      -->
+    <!--
     <fieldType name="geo"       class="org.apache.solr.spatial.pending.GeometryFieldType" units="degrees" />
     <fieldType name="bbox"      class="org.apache.solr.spatial.pending.BBoxFieldType" units="degrees" />
+    -->
     <fieldType name="ptvector"  class="solr.SpatialPointVectorFieldType" units="degrees" />
     <fieldType name="quad"      class="solr.SpatialTermQueryPrefixTreeFieldType" units="degrees" />
     <fieldType name="geohash"   class="solr.SpatialRecursivePrefixTreeFieldType" units="degrees" />
@@ -73,12 +75,12 @@
    <field name="name"   type="text"    indexed="true" stored="true" required="true" />
    <field name="source" type="string"  indexed="true" stored="true" />
 
-   <field name="shape"    type="string" multiValued="false" /><!-- original -->
+   <field name="shape"    type="string" indexed="false" /><!-- original -->
 
    <!-- geometry -->
-   <field name="geo"      type="geo"      indexed="true" stored="false"  multiValued="false" />
+   <!--<field name="geo"      type="geo"      indexed="true" stored="false"  multiValued="false" />-->
+   <!--<field name="bbox"     type="bbox"     indexed="true" stored="false"  multiValued="false" />-->
    <field name="ptvector" type="ptvector" indexed="true" stored="false"  multiValued="false" />
-   <field name="bbox"     type="bbox"     indexed="true" stored="false"  multiValued="false" />
    <field name="quad"     type="quad"     indexed="true" stored="false"  multiValued="false" />
    <field name="geohash"  type="geohash"  indexed="true" stored="false"  multiValued="false" />
    

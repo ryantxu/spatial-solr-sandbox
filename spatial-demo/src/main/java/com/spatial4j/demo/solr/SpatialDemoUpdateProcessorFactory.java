@@ -6,11 +6,15 @@ import com.spatial4j.core.context.jts.JtsSpatialContext;
 import com.spatial4j.core.shape.Shape;
 import com.spatial4j.core.shape.ShapeCollection;
 import com.spatial4j.core.shape.jts.JtsGeometry;
-import com.vividsolutions.jts.geom.*;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFilter;
+import com.vividsolutions.jts.geom.MultiPolygon;
+import com.vividsolutions.jts.geom.Polygon;
 import org.apache.solr.common.SolrInputField;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.response.SolrQueryResponse;
+import org.apache.solr.schema.IndexSchema;
 import org.apache.solr.update.AddUpdateCommand;
 import org.apache.solr.update.processor.UpdateRequestProcessor;
 import org.apache.solr.update.processor.UpdateRequestProcessorFactory;
@@ -18,7 +22,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 
 public class SpatialDemoUpdateProcessorFactory extends UpdateRequestProcessorFactory
@@ -46,13 +54,16 @@ public class SpatialDemoUpdateProcessorFactory extends UpdateRequestProcessorFac
   @Override
   public DemoUpdateProcessor getInstance(SolrQueryRequest req, SolrQueryResponse rsp, UpdateRequestProcessor next)
   {
-    return new DemoUpdateProcessor(next);
+    return new DemoUpdateProcessor(next, req.getSchema());
   }
 
   class DemoUpdateProcessor extends UpdateRequestProcessor
   {
-    public DemoUpdateProcessor(UpdateRequestProcessor next) {
+    private final IndexSchema schema;
+
+    public DemoUpdateProcessor(UpdateRequestProcessor next, IndexSchema schema) {
       super(next);
+      this.schema = schema;
     }
 
     @Override
@@ -75,12 +86,17 @@ public class SpatialDemoUpdateProcessorFactory extends UpdateRequestProcessorFac
         }
         final float boost = shapeField.getBoost();
 
-        //The "geo" shape only accepts JtsGeometry
-        JtsGeometry jtsGeom = toJtsGeom(shape);
-        //log.warn("Couldn't index into 'geo' field for doc {}; got class {}", cmd.getPrintableId(), shape.getClass());
-        addField(cmd, "geo", jtsGeom, boost);
+        //We check existence for the following two fields since they require LSE which is optional
+        if (schema.getFieldOrNull("geo") != null) {
+          //The "geo" shape only accepts JtsGeometry
+          JtsGeometry jtsGeom = toJtsGeom(shape);
+          //log.warn("Couldn't index into 'geo' field for doc {}; got class {}", cmd.getPrintableId(), shape.getClass());
+          addField(cmd, "geo", jtsGeom, boost);
+        }
+        if (schema.getFieldOrNull("bbox") != null) {
+          addField(cmd, "bbox", shape.getBoundingBox(), boost);
+        }
 
-        addField(cmd, "bbox", shape.getBoundingBox(), boost);
         addField(cmd, "ptvector", shape.getCenter(), boost);
 
         //Work-around that SolrInputField treats Collection as multi-value due to ShapeCollection
